@@ -4,13 +4,13 @@
 
 ## 1. Thông tin học viên
 
-- **Họ và tên:**
-- **MSSV:**
+- **Họ và tên: Nguyễn Anh Trí**
+- **MSSV: 2A202602730**
 - **Lớp:** K4-L3A
-- **Repository URL:**
-- **Commit SHA cuối:**
-- **Challenge ID:**
-- **Tên project Langfuse cá nhân:** `day13-k4-l3a-<MSSV>`
+- **Repository URL: **
+- **Commit SHA cuối: **
+- **Challenge ID: **
+- **Tên project Langfuse cá nhân:** `day13-k4-l3a-<MSSV>` LOCAL CONTAINER
 
 ## 2. Evidence index
 
@@ -37,13 +37,13 @@
 
 | Nội dung | Baseline | Kết quả cuối | Nhận xét |
 |---|---|---|---|
-| `validate_logs.py` | | | |
-| `validate_dashboard.py` | | | |
-| `pytest` | | | |
-| Số traces hợp lệ | | | |
-| Số PII leak | | | |
-| Latency P95 / TTFT P95 | | | |
-| Retrieval success rate | | | |
+| `validate_logs.py` | `30/100` (0 correlation ID, 20/21 thiếu enrichment, 0 PII leak) | `100/100` (10 correlation ID, 0 thiếu required/enrichment, 0 PII leak) | CP1: correlation ID + bind metadata + scrub trước khi ghi |
+| `validate_dashboard.py` | `HỢP LỆ: 6/6 panel` | `HỢP LỆ: 6/6 panel` | Contract không đổi; chốt runtime ở CP2 |
+| `pytest` | `22 passed` | `22 passed` | Public tests giữ xanh sau CP1 |
+| Số traces hợp lệ | `0` | *chốt ở CP2* | Baseline tắt tracing; CP2 mới tạo prompt/trace |
+| Số PII leak | `0` | `0` | Kiểm chứng với email/phone/CCCD/card, log chỉ còn token `[REDACTED_*]` |
+| Latency P95 / TTFT P95 | `150.0 ms / 50.0 ms` | `166.0 ms / 50.0 ms` | Đo từ `/metrics` (11 request, tracing bật) |
+| Retrieval success rate | `100%` (10/10, `error_breakdown` rỗng) | `100%` (11/11, `error_breakdown` rỗng) | Không có lỗi retrieval |
 
 ## 4. Logging và PII
 

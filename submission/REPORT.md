@@ -10,7 +10,9 @@
 - **Repository URL:** <điền URL repo cá nhân>
 - **Commit SHA cuối:** <điền SHA sau khi commit>
 - **Challenge ID:** `day13-k4-l3a-monitoring-llmops-v1`
-- **Tên project Langfuse cá nhân:** `day13-k4-l3a-2A202602730` (local container)
+- **Tên project Langfuse cá nhân:** `monitor_logging` (self-hosted, local container)
+
+> **Ghi chú local deployment & đặt tên:** tôi tự host Langfuse bằng Docker Compose theo mục tùy chọn trong `docs/SETUP.md` (`LANGFUSE_BASE_URL=http://localhost:3000`) thay vì Langfuse Cloud. Đây là instance riêng nên chỉ mình tôi tạo trace/prompt. Instance local dùng project tên `monitor_logging`, khác quy ước gợi ý `day13-k4-l3a-<MSSV>`; tên này không ảnh hưởng tính "cá nhân" của dữ liệu và có thể đổi trong Settings nếu cần đúng quy ước.
 
 ## 2. Evidence index
 
@@ -27,7 +29,8 @@
 | Trace waterfall | `evidence/07-trace-waterfall.png` |
 | Trace metadata | `evidence/08-trace-metadata.png` |
 | Prompt versions | `evidence/09-prompt-versions.png` |
-| Prompt rollback | `evidence/10-prompt-rollback.png` |
+| Prompt promote | `evidence/10a-prompt-promote.png` |
+| Prompt rollback | `evidence/10b-prompt-rollback.png` |
 | Dashboard runtime | `evidence/11-dashboard-overview.png` |
 | Incident metric | `evidence/12-incident-metric.png` |
 | Incident log | `evidence/13-incident-log.png` |
@@ -61,7 +64,7 @@
 - **Version/label baseline:** v1 — labels `baseline`, `production`
 - **Version/label candidate:** v2 — label `candidate`
 - **Trace ID của mỗi version:** v1/`baseline`: `<điền trace ID>`; v2/`candidate`: `<điền trace ID>`; waterfall mẫu: `9ffb4c328ec05d824b75cb3f41e286c4`
-- **Cách promote và rollback `production`:** dùng `scripts/manage_prompts.py promote|rollback` (hoặc UI): promote chuyển `production` sang v2, rollback đưa `production` về v1; ảnh trước/sau ở `evidence/10-prompt-rollback.png`.
+- **Cách promote và rollback `production`:** chạy `python scripts/manage_prompts.py promote` để chuyển `production` sang v2 (`evidence/10a-prompt-promote.png`), rồi `python scripts/manage_prompts.py rollback` để đưa `production` về v1 (`evidence/10b-prompt-rollback.png`).
 
 ## 6. Dashboard, SLO và alerts
 

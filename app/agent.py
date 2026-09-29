@@ -9,7 +9,13 @@ from .mock_llm import FakeLLM
 from .mock_rag import retrieve
 from .pii import hash_user_id, summarize_text
 from .prompt_management import resolve_prompt
-from .tracing import get_langfuse_client, observe, propagate_attributes, tracing_enabled
+from .tracing import (
+    get_langfuse_client,
+    observe,
+    propagate_attributes,
+    start_observation,
+    tracing_enabled,
+)
 
 
 @dataclass
@@ -51,7 +57,21 @@ class LabAgent:
             },
         ):
             started = time.perf_counter()
-            docs = retrieve(message)
+            with start_observation(
+                langfuse_client,
+                name="retrieval",
+                as_type="retriever",
+                input={"query_preview": summarize_text(message)},
+            ) as retrieval_observation:
+                docs = retrieve(message)
+                if retrieval_observation is not None:
+                    retrieval_observation.update(
+                        output={"doc_count": len(docs)},
+                        metadata={
+                            "doc_count": len(docs),
+                            "query_preview": summarize_text(message),
+                        },
+                    )
             prompt = resolve_prompt(
                 langfuse_client,
                 feature=feature,
@@ -71,10 +91,37 @@ class LabAgent:
                 },
                 version=prompt.version,
             )
-            # TODO (CP2): instrument retrieve() and FakeLLM.generate() as child
-            # observations. The nested generation must receive prompt, usage and cost.
             with propagate_attributes(prompt=prompt.managed_prompt):
-                response = self.llm.generate(prompt.text)
+                with start_observation(
+                    langfuse_client,
+                    name="llm-generation",
+                    as_type="generation",
+                    model=self.model,
+                    prompt=prompt.managed_prompt,
+                    input={"prompt_preview": summarize_text(prompt.text)},
+                    metadata={
+                        "prompt_name": prompt.name,
+                        "prompt_label": prompt.label,
+                        "prompt_version": prompt.version,
+                        "prompt_source": prompt.source,
+                    },
+                ) as generation_observation:
+                    response = self.llm.generate(prompt.text)
+                    if generation_observation is not None:
+                        input_cost = self._input_cost(response.usage.input_tokens)
+                        output_cost = self._output_cost(response.usage.output_tokens)
+                        generation_observation.update(
+                            output={"answer_preview": summarize_text(response.text)},
+                            usage_details={
+                                "input": response.usage.input_tokens,
+                                "output": response.usage.output_tokens,
+                            },
+                            cost_details={
+                                "input": round(input_cost, 6),
+                                "output": round(output_cost, 6),
+                                "total": round(input_cost + output_cost, 6),
+                            },
+                        )
             quality_score = self._heuristic_quality(message, response.text, docs)
             latency_ms = int((time.perf_counter() - started) * 1000)
             cost_usd = self._estimate_cost(response.usage.input_tokens, response.usage.output_tokens)
@@ -99,9 +146,15 @@ class LabAgent:
         )
 
     def _estimate_cost(self, tokens_in: int, tokens_out: int) -> float:
-        input_cost = (tokens_in / 1_000_000) * 3
-        output_cost = (tokens_out / 1_000_000) * 15
-        return round(input_cost + output_cost, 6)
+        return round(self._input_cost(tokens_in) + self._output_cost(tokens_out), 6)
+
+    @staticmethod
+    def _input_cost(tokens_in: int) -> float:
+        return (tokens_in / 1_000_000) * 3
+
+    @staticmethod
+    def _output_cost(tokens_out: int) -> float:
+        return (tokens_out / 1_000_000) * 15
 
     def _heuristic_quality(self, question: str, answer: str, docs: list[str]) -> float:
         score = 0.5

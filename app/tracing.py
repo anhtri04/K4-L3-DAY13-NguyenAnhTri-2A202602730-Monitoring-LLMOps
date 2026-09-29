@@ -36,6 +36,16 @@ def get_langfuse_client():
     return get_client()
 
 
+@contextmanager
+def start_observation(client: Any, **kwargs: Any):
+    starter = getattr(client, "start_as_current_observation", None)
+    if starter is None:
+        yield None
+        return
+    with starter(**kwargs) as observation:
+        yield observation
+
+
 def tracing_enabled() -> bool:
     return LANGFUSE_SDK_AVAILABLE and bool(
         os.getenv("LANGFUSE_PUBLIC_KEY") and os.getenv("LANGFUSE_SECRET_KEY")

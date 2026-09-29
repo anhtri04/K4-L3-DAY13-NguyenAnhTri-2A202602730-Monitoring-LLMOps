@@ -7,7 +7,14 @@ primary_slo:
     total_event: 'event == "request_received"'
   target_percent: 99.5
   error_budget_percent: 0.5
-  note: Học viên phải giải thích hoặc điều chỉnh ngưỡng bằng baseline của mình.
+  # Baseline (10 request): P95 = 150 ms, error rate = 0%. Nguong 3000 ms rong hon
+  # nhieu so voi hanh vi binh thuong, nen target 99.5% la hop ly va con headroom
+  # cho incident. Error budget = (100 - target)% = 0.5% tong request.
+  # Vi du: 10.000 request / 28 ngay => 50 request duoc phep "xau" (cham hoac loi);
+  # thoi gian tuong ung phu thuoc traffic thuc te.
+  error_budget_example:
+    requests_per_window: 10000
+    allowed_bad_requests: 50
 guardrails:
   error_rate_pct_max: 2
   daily_cost_usd_max: 2.5

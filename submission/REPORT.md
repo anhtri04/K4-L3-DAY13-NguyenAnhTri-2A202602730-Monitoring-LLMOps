@@ -8,7 +8,7 @@
 - **MSSV:** 2A202602730
 - **Lớp:** K4-L3A
 - **Repository URL:** https://github.com/anhtri04/K4-L3-DAY13-NguyenAnhTri-2A202602730-Monitoring-LLMOps
-- **Commit SHA cuối:** <điền SHA sau khi commit>
+- **Commit SHA cuối:** d0f6513f26c1763871daaf2bc1b511df802f8935
 - **Challenge ID:** `day13-k4-l3a-monitoring-llmops-v1`
 - **Tên project Langfuse cá nhân:** `monitor_logging` (self-hosted, local container)
 
